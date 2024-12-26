@@ -5,9 +5,9 @@ import string
 import re
 import math
 tokenizer = TreebankWordTokenizer()
+
+
 folder_path = "C:\\Users\\sobha\\OneDrive\\Desktop\\Sobhan\\University\\term 5\\Information Retrival\\project\\IR-Project\\Documents"
-
-
 def remove_punctuation(text):
     return text.translate(str.maketrans('', '', string.punctuation))
 
@@ -27,16 +27,11 @@ for filename in sorted(os.listdir(folder_path)):
             doc_mapping.append((doc_id, filename))  
 
 
-# Debug: Print document mapping
-print("Document Mapping:")
-for doc_id, filename in sorted(doc_mapping):
-    print(f"Document {doc_id}: {filename}")
 
 
 
-# Step 2: Build the term frequency table and document frequency table
-term_frequencies = {}  # Term frequencies per document {doc_id: {term: count}}
-document_frequencies = {}  # Document frequencies {term: number of documents containing term}
+term_frequencies = {}  
+document_frequencies = {}  
 
 for doc_id, tokens in documents:
     term_frequencies[doc_id] = {}
@@ -47,20 +42,20 @@ for doc_id, tokens in documents:
             document_frequencies[token] = set()
         document_frequencies[token].add(doc_id)
 
-# Convert document frequency sets to counts
+
 for term in document_frequencies:
     document_frequencies[term] = len(document_frequencies[term])
 
-# Step 3: Calculate TF-IDF weights
+
 total_documents = len(documents)
-tf_idf = {}  # {doc_id: {term: tf-idf}}
+tf_idf = {}  
 
 for doc_id, term_freqs in term_frequencies.items():
     tf_idf[doc_id] = {}
     total_terms = sum(term_freqs.values())
     for term, count in term_freqs.items():
-        tf = count / total_terms  # Term frequency
-        idf = math.log(total_documents / (1 + document_frequencies[term]))  # Inverse document frequency
+        tf = count / total_terms  
+        idf = math.log(total_documents / (1 + document_frequencies[term]))  
         tf_idf[doc_id][term] = tf * idf
 
 
@@ -74,10 +69,15 @@ for doc_id, terms in tf_idf.items():
             inverted_index[term] = []
         inverted_index[term].append((doc_id, weight))
 
+
+
 print("\nInverted Index with TF-IDF:")
 for term, postings in inverted_index.items():
-    formatted_postings = [(doc_id, f"{weight:.4f}") for doc_id, weight in postings]  # Format to 4 decimal places
+    formatted_postings = [(doc_id, f"{weight:.4f}") for doc_id, weight in postings]  
     print(f"Term: '{term}' -> {formatted_postings}")
+
+
+
 
 def get_matching_docs(term):
     if '*' in term or '?' in term:
@@ -95,8 +95,6 @@ def get_matching_docs(term):
             print(f"Exact match for '{term}': {[term]}")  
         return inverted_index.get(term, set())
 
-
-
 def process_query(query):
     """Process boolean queries with wildcard support"""
     terms = query.split()
@@ -109,23 +107,39 @@ def process_query(query):
     docs1 = get_matching_docs(term1)
     docs2 = get_matching_docs(term2)
 
-    # Extract only the document IDs (ignore TF-IDF scores)
-    doc_ids1 = set(doc[0] for doc in docs1)  # Extract doc_id from (doc_id, tf-idf)
-    doc_ids2 = set(doc[0] for doc in docs2)  # Extract doc_id from (doc_id, tf-idf)
+    # Extract only the document IDs and their TF-IDF scores
+    doc_ids1_with_scores = {doc_id: tf_idf for doc_id, tf_idf in docs1}  # {doc_id: tf-idf}
+    doc_ids2_with_scores = {doc_id: tf_idf for doc_id, tf_idf in docs2}  # {doc_id: tf-idf}
 
-    print(f"Docs for '{term1}': {sorted(doc_ids1)}")  # Debug: Print docs for term1
-    print(f"Docs for '{term2}': {sorted(doc_ids2)}")  # Debug: Print docs for term2
+    print(f"Docs for '{term1}': {[(doc_id, f'{score:.4f}') for doc_id, score in doc_ids1_with_scores.items()]}")
+    print(f"Docs for '{term2}': {[(doc_id, f'{score:.4f}') for doc_id, score in doc_ids2_with_scores.items()]}")
+
+    # Extract only the document IDs for set operations
+    doc_ids1 = set(doc_ids1_with_scores.keys())
+    doc_ids2 = set(doc_ids2_with_scores.keys())
 
     # Perform the boolean operation
     if operator == "AND":
-        return sorted(doc_ids1 & doc_ids2)  # Intersection
+        matching_docs = doc_ids1 & doc_ids2  # Intersection
     elif operator == "OR":
-        return sorted(doc_ids1 | doc_ids2)  # Union
+        matching_docs = doc_ids1 | doc_ids2  # Union
     elif operator == "NOT":
-        return sorted(doc_ids1 - doc_ids2)  # Difference
+        matching_docs = doc_ids1 - doc_ids2  # Difference
     else:
         return "Invalid operator. Use AND, OR, or NOT."
 
+    # Show results with TF-IDF scores
+    results_with_scores = []
+    for doc_id in matching_docs:
+        score1 = doc_ids1_with_scores.get(doc_id, 0)
+        score2 = doc_ids2_with_scores.get(doc_id, 0)
+        total_score = score1 + score2
+        results_with_scores.append((doc_id, total_score))
+
+    # Sort results by TF-IDF scores
+    results_with_scores.sort(key=lambda x: x[1], reverse=True)
+
+    return results_with_scores
 
 while True:
     query = input("Enter a boolean query (or 'exit' to quit): ")
