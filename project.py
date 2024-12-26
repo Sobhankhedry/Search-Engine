@@ -29,13 +29,37 @@ for doc_id, tokens in enumerate(documents):
     for token in tokens:
         if token not in inverted_index:
             inverted_index[token] = set()  # Use a set to avoid duplicate entries
-        inverted_index[token].add(doc_id +1)
+        inverted_index[token].add(doc_id)
 
-# Step 3: Convert sets to lists for easier readability
-for token in inverted_index:
-    inverted_index[token] = list(inverted_index[token])
 
-# Print the inverted index
-for word, doc_ids in inverted_index.items():
-    print(f"Word: '{word}' -> Documents: {doc_ids}")
 
+def process_query(query):
+    terms = query.split()
+    if len(terms) != 3:
+        return "Invalid query format. Use: term1 AND term2, term1 OR term2, term1 NOT term2."
+
+    term1 = terms[0]
+    operator = terms[1].upper()
+    term2 = terms[2]
+    # Get document sets for terms
+    docs_term1 = inverted_index.get(term1, set())
+    docs_term2 = inverted_index.get(term2, set())
+    
+    if operator == "AND":
+        result = docs_term1 & docs_term2  # Intersection
+    elif operator == "OR":
+        result = docs_term1 | docs_term2  # Union
+    elif operator == "NOT":
+        result = docs_term1 - docs_term2  # Difference
+    else:
+        return "Invalid operator. Use AND, OR, or NOT."
+
+    return result
+
+
+while True:
+    query = input("Enter a boolean query (or 'exit' to quit): ")
+    if query.lower() == "exit":
+        break
+    result = process_query(query)
+    print(f"Documents matching query '{query}': {result}")
