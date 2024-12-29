@@ -1,4 +1,4 @@
-# Boolean Search Engine with TF-IDF and Wildcard Support
+# Boolean Search Engine with TF-IDF and Wildcard Queries
 
 This project implements a Boolean search engine with TF-IDF weighting for ranking documents. It allows users to query a collection of documents using boolean operators (`AND`, `OR`, `NOT`) and wildcard characters (`*`, `?`). The engine computes term frequencies, document frequencies, and TF-IDF scores, while also supporting efficient retrieval through an inverted index.
 
