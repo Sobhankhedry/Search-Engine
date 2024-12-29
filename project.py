@@ -103,32 +103,31 @@ def process_query(query):
 
     term1, operator, term2 = terms[0], terms[1].upper(), terms[2]
 
-    # Get the matching documents (including TF-IDF scores)
+   
     docs1 = get_matching_docs(term1)
     docs2 = get_matching_docs(term2)
 
-    # Extract only the document IDs and their TF-IDF scores
-    doc_ids1_with_scores = {doc_id: tf_idf for doc_id, tf_idf in docs1}  # {doc_id: tf-idf}
-    doc_ids2_with_scores = {doc_id: tf_idf for doc_id, tf_idf in docs2}  # {doc_id: tf-idf}
+    
+    doc_ids1_with_scores = {doc_id: tf_idf for doc_id, tf_idf in docs1}  
+    doc_ids2_with_scores = {doc_id: tf_idf for doc_id, tf_idf in docs2}  
 
     print(f"Docs for '{term1}': {[(doc_id, f'{score:.4f}') for doc_id, score in doc_ids1_with_scores.items()]}")
     print(f"Docs for '{term2}': {[(doc_id, f'{score:.4f}') for doc_id, score in doc_ids2_with_scores.items()]}")
 
-    # Extract only the document IDs for set operations
     doc_ids1 = set(doc_ids1_with_scores.keys())
     doc_ids2 = set(doc_ids2_with_scores.keys())
 
-    # Perform the boolean operation
+    
     if operator == "AND":
-        matching_docs = doc_ids1 & doc_ids2  # Intersection
+        matching_docs = doc_ids1 & doc_ids2  
     elif operator == "OR":
-        matching_docs = doc_ids1 | doc_ids2  # Union
+        matching_docs = doc_ids1 | doc_ids2  
     elif operator == "NOT":
-        matching_docs = doc_ids1 - doc_ids2  # Difference
+        matching_docs = doc_ids1 - doc_ids2  
     else:
         return "Invalid operator. Use AND, OR, or NOT."
 
-    # Show results with TF-IDF scores
+    
     results_with_scores = []
     for doc_id in matching_docs:
         score1 = doc_ids1_with_scores.get(doc_id, 0)
@@ -136,7 +135,7 @@ def process_query(query):
         total_score = score1 + score2
         results_with_scores.append((doc_id, total_score))
 
-    # Sort results by TF-IDF scores
+    
     results_with_scores.sort(key=lambda x: x[1], reverse=True)
 
     return results_with_scores
